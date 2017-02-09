@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <title>{% block title %}Geo App{% endblock %}</title>
+
+        <link rel="shortcut icon" href="/static/favicon.ico" />
+
+        {% block css %}
+            <script src="/static/build/styles.bundle.js"></script>
+        {% endblock %}
+    </head>
+    <body>
+        <div class="container">
+            {% block body %}{% endblock %}
+        </div>
+
+        {% block javascript %}
+            <script src="/static/build/vendor.bundle.js"></script>
+            <script src="/static/build/app.bundle.js"></script>
+        {% endblock %}
+    </body>
+</html>

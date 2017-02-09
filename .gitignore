@@ -1,0 +1,7 @@
+ENV
+node_modules
+__pycache__
+*.sqlite
+*.pyc
+*.egg-info
+env.sh
