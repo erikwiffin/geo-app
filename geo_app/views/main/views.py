@@ -37,6 +37,13 @@ def start_trip():
                 RETURN p
         )
 
+        LET pilsner = FIRST(
+            FOR p IN NEAR(destinations, dest.lat, dest.lng)
+                FILTER p.type == 'pilsners'
+                LIMIT 1
+                RETURN p
+        )
+
         LET peculiarity = FIRST(
             FOR p IN NEAR(destinations, dest.lat, dest.lng)
                 FILTER p.type == 'peculiarities'
@@ -44,19 +51,24 @@ def start_trip():
                 RETURN p
         )
 
-        RETURN {park, peculiarity}
+        RETURN {park, pilsner, peculiarity}
     ''').next()
 
-    arango.database('geo').collection('parts').import_bulk([
-        {
+    if parts['park']:
+        arango.database('geo').collection('parts').insert({
             '_from': res['_id'],
             '_to': parts['park']['_id'],
-        },
-        {
+        })
+    if parts['pilsner']:
+        arango.database('geo').collection('parts').insert({
+            '_from': res['_id'],
+            '_to': parts['pilsner']['_id'],
+        })
+    if parts['peculiarity']:
+        arango.database('geo').collection('parts').insert({
             '_from': res['_id'],
             '_to': parts['peculiarity']['_id'],
-        },
-    ])
+        })
 
     return redirect(url_for('.trip', trip_id=res['_key']))
 

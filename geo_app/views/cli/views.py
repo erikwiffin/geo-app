@@ -27,6 +27,7 @@ def initdb():
     coll.truncate()
 
     _import_collection(coll, 'parks')
+    _import_collection(coll, 'pilsners')
     _import_collection(coll, 'peculiarities')
 
 
@@ -35,6 +36,8 @@ def _import_collection(coll, name):
     with open(path) as fh:
         reader = csv.DictReader(fh)
         for row in reader:
+            if not row['lat'] or not row['lng']:
+                continue
             document = {
                 'lat': float(row['lat']),
                 'lng': -1 * float(row['lng']),
