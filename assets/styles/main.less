@@ -1,6 +1,43 @@
 @import '~bootstrap/less/bootstrap.less';
+@import 'variables.less';
+
+header {
+    margin: 48px 0;
+    border-bottom: 3px solid @brand-primary;
+
+    .btn-default {
+        text-transform: uppercase;
+        font-weight: bold;
+        border: none;
+
+        &:hover {
+            background: @brand-primary;
+            color: @gray-dark;
+            border: none;
+        }
+    }
+}
+
+footer {
+    margin: 36px 0 0;
+    padding: 12px 0;
+    border-top: 1px solid @brand-primary;
+    color: @gray;
+
+    a {
+        color: inherit;
+    }
+    a:hover {
+        background: @brand-primary;
+    }
+}
+
+.content {
+    background: #FFF;
+    border: 1px solid @gray-light;
+}
 
 #map {
-    height: 400px;
+    height: 500px;
     width: 100%;
 }

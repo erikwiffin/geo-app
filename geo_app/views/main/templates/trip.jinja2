@@ -2,7 +2,7 @@
 
 {% block body %}
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-5 col-md-offset-1 content">
             <h2>This is your trip!</h2>
             <ul>
                 {% for part in parts %}
@@ -12,7 +12,20 @@
                         data-name="{{ part.name }}">{{ part.name }}</li>
                 {% endfor %}
             </ul>
-            <div id="map"></div>
+
+            <p class="text-center">
+                <!-- Pig Filled icon by Icons8 -->
+                <img src="https://maxcdn.icons8.com/iOS7/PNG/50/Animals/pig_filled-50.png" title="Pig Filled" width="50">
+                &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+                <!-- Beer Filled icon by Icons8 -->
+                <img src="https://maxcdn.icons8.com/iOS7/PNG/50/Food/beer_filled-50.png" title="Beer Filled" width="50">
+                &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+                <!-- Trekking Filled icon by Icons8 -->
+                <img src="https://maxcdn.icons8.com/iOS7/PNG/50/Sports/trekking_filled-50.png" title="Trekking Filled" width="50">
+            </p>
+        </div>
+        <div class="col-md-5">
+            <div id="map" class="content"></div>
         </div>
     </div>
 {% endblock %}

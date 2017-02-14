@@ -5,13 +5,29 @@
         <link rel="shortcut icon" href="/static/favicon.ico" />
 
         {% block css %}
+            <link href="https://fonts.googleapis.com/css?family=Noto+Serif" rel="stylesheet">
             <script src="/static/build/styles.bundle.js"></script>
         {% endblock %}
     </head>
     <body>
         <div class="container">
-            <h1>Pigs, Parks, & Pilsners</h1>
+            <header>
+                <form action="/trip" method="POST">
+                    <h1>
+                        Pigs, Parks, & Pilsners
+                        <small><button type="submit" class="btn btn-default">Start your trip!</button></small>
+                    </h1>
+                </form>
+            </header>
+
             {% block body %}{% endblock %}
+
+            {% block footer %}
+                <footer>
+                    Copyright &copy; {{ now.year }} <a href="http://erik.wiffin.com">Erik Wiffin</a> and Hannah Hudson.
+                    <a href="https://icons8.com">Icon pack by Icons8</a>
+                </footer>
+            {% endblock %}
         </div>
 
         {% block javascript %}
