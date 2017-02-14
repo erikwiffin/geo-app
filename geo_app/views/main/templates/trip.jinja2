@@ -1,0 +1,24 @@
+{% extends "base.jinja2" %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <h2>This is your trip!</h2>
+            <ul>
+                {% for part in parts %}
+                    <li class="destination"
+                        data-lat="{{ part.lat }}"
+                        data-lng="{{ part.lng }}"
+                        data-name="{{ part.name }}">{{ part.name }}</li>
+                {% endfor %}
+            </ul>
+            <div id="map"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    {{ super() }}
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_API_KEY }}&callback=initMap"></script>
+{% endblock %}

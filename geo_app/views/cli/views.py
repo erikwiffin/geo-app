@@ -16,19 +16,29 @@ def initdb():
     ''' Initialize the database.
     '''
     try:
-        db = arango.create_database('geo')
-    except:
         db = arango.database('geo')
-
-    try:
-        coll = db.create_collection('park')
     except:
-        coll = db.collection('park')
-        coll.truncate()
+        db = arango.create_database('geo')
 
-    with open('./data/state-parks.csv') as fh:
+    db.collection('parts').truncate()
+    db.collection('trips').truncate()
+
+    coll = db.collection('destinations')
+    coll.truncate()
+
+    _import_collection(coll, 'parks')
+    _import_collection(coll, 'peculiarities')
+
+
+def _import_collection(coll, name):
+    path = './data/{}.csv'.format(name)
+    with open(path) as fh:
         reader = csv.DictReader(fh)
         for row in reader:
-            row['lat'] = float(row['lat'])
-            row['lon'] = float(row['lon'])
-            coll.insert(row)
+            document = {
+                'lat': float(row['lat']),
+                'lng': -1 * float(row['lng']),
+                'name': row['name'].strip(),
+                'type': name,
+            }
+            coll.insert(document)

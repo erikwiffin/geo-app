@@ -2,10 +2,13 @@
 
 {% block body %}
     <div class="row">
-        <div class="col-md-12 text-center">
-            <h1>{{ p1.name }} <small>({{ p1.lat }}, {{ p1.lon }})</small></h1>
-            <p>is near</p>
-            <h1>{{ p2.name }} <small>({{ p2.lat }}, {{ p2.lon }})</small></h1>
+        <div class="col-md-12">
+            <h2>
+                Start your trip!
+                <form action="/trip" method="POST" class="form-inline">
+                    <button type="submit" class="btn btn-primary">Go!</button>
+                </form>
+            </h2>
         </div>
     </div>
 {% endblock %}

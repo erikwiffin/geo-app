@@ -8,6 +8,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
 
 app.config['ARANGODB_DATABASE_URI'] = os.getenv('ARANGODB_DATABASE_URI')
+app.config['GOOGLE_API_KEY'] = os.getenv('GOOGLE_API_KEY')
 
 
 def create_app():
