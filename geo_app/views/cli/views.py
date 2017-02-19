@@ -1,6 +1,7 @@
 ''' CLI commands.
 '''
 import csv
+import math
 
 from flask import Blueprint
 
@@ -29,6 +30,35 @@ def initdb():
     _import_collection(coll, 'parks')
     _import_collection(coll, 'pilsners')
     _import_collection(coll, 'peculiarities')
+    _import_collection(coll, 'pigs')
+
+
+@app.cli.command()
+def download_bbq():
+    ''' Download the truecue list.
+    '''
+    import requests
+    html = requests.get('http://www.truecue.org/true-cue-nc/').text
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, 'html.parser')
+
+    list_items = soup.select('#page ul > li')
+
+    with open('./data/pigs.csv', 'w') as fh:
+        fieldnames = ['name', 'lat', 'lng', 'url']
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        for item in list_items:
+            link = item.select_one('a')
+            if not link:
+                print(item)
+                continue
+            row = {
+                'name': link.get_text(),
+                'lat': '',
+                'lng': '',
+                'url': link.get('href'),
+            }
+            writer.writerow(row)
 
 
 def _import_collection(coll, name):
@@ -40,7 +70,8 @@ def _import_collection(coll, name):
                 continue
             document = {
                 'lat': float(row['lat']),
-                'lng': -1 * float(row['lng']),
+                'lng': -1 * math.fabs(float(row['lng'])),
+                'url': row.get('url'),
                 'name': row['name'].strip(),
                 'type': name,
             }

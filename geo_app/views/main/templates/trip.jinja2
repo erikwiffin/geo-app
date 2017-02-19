@@ -1,37 +1,37 @@
 {% extends "base.jinja2" %}
 
 {% block body %}
+    <div class="row" id="destinations">
+        {% for part in parts %}
+            <div class="col-md-4">
+                <div class="well text-center destination">
+                    <p>
+                        {% if part.type == 'pigs' %}
+                            <!-- Pig Filled icon by Icons8 -->
+                            <img src="/static/icons/pig.png" alt="Pig" width="50" />
+                        {% elif part.type == 'pilsners' %}
+                            <!-- Beer Filled icon by Icons8 -->
+                            <img src="/static/icons/beer.png" alt="Beer" width="50" />
+                        {% elif part.type == 'parks' %}
+                            <!-- Trekking Filled icon by Icons8 -->
+                            <img src="/static/icons/hiker.png" alt="Hiker" width="50" />
+                        {% endif %}
+                    </p>
+                    <h3>{{ part.name }}</h3>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
     <div class="row">
-        <div class="col-md-5 col-md-offset-1 content">
-            <h2>This is your trip!</h2>
-            <ul>
-                {% for part in parts %}
-                    <li class="destination"
-                        data-lat="{{ part.lat }}"
-                        data-lng="{{ part.lng }}"
-                        data-name="{{ part.name }}">{{ part.name }}</li>
-                {% endfor %}
-            </ul>
-
-            <p class="text-center">
-                <!-- Pig Filled icon by Icons8 -->
-                <img src="https://maxcdn.icons8.com/iOS7/PNG/50/Animals/pig_filled-50.png" title="Pig Filled" width="50">
-                &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-                <!-- Beer Filled icon by Icons8 -->
-                <img src="https://maxcdn.icons8.com/iOS7/PNG/50/Food/beer_filled-50.png" title="Beer Filled" width="50">
-                &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-                <!-- Trekking Filled icon by Icons8 -->
-                <img src="https://maxcdn.icons8.com/iOS7/PNG/50/Sports/trekking_filled-50.png" title="Trekking Filled" width="50">
-            </p>
-        </div>
-        <div class="col-md-5">
-            <div id="map" class="content"></div>
+        <div class="col-md-10 col-md-offset-1">
+            <div id="map" class="well"></div>
         </div>
     </div>
 {% endblock %}
 
 {% block javascript %}
     {{ super() }}
+    <script type="application/json" id="destinations-data">{{ parts | jsonify }}</script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_API_KEY }}&callback=initMap"></script>
 {% endblock %}
