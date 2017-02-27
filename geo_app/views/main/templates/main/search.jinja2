@@ -1,0 +1,54 @@
+{% extends "base.jinja2" %}
+
+{% block body %}
+    <div class="row" id="destinations">
+        <div class="col-md-4">
+            <form action="/trip" method="post" class="well text-center">
+                <div class="form-group">
+                    <img src="/static/icons/hiker.png" alt="Hiker" width="50" />
+                </div>
+                <div class="form-group">
+                    <select name="start" class="form-control">
+                        <option>-- Select a State Park --</option>
+                        {% for park in parks %}
+                            <option value="{{ park._key }}">{{ park.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="btn btn-default" type="submit">Start your trip!</button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <form action="/trip" method="post" class="well text-center">
+                <div class="form-group">
+                    <img src="/static/icons/pig.png" alt="Pig" width="50" />
+                </div>
+                <div class="form-group">
+                    <select name="start" class="form-control">
+                        <option>-- Select a BBQ Restaurant --</option>
+                        {% for pig in pigs %}
+                            <option value="{{ pig._key }}">{{ pig.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="btn btn-default" type="submit">Start your trip!</button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <form action="/trip" method="post" class="well text-center">
+                <div class="form-group">
+                    <img src="/static/icons/beer.png" alt="Beer" width="50" />
+                </div>
+                <div class="form-group">
+                    <select name="start" class="form-control">
+                        <option>-- Select a Brewery --</option>
+                        {% for pilsner in pilsners %}
+                            <option value="{{ pilsner._key }}">{{ pilsner.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="btn btn-default" type="submit">Start your trip!</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

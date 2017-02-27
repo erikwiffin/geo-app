@@ -1,10 +1,13 @@
 # pylint: disable=missing-docstring
 """ Views module
 """
+from itertools import groupby
 from flask import (
     Blueprint,
+    jsonify,
     redirect,
     render_template,
+    request,
     url_for,
 )
 
@@ -17,7 +20,7 @@ BP = Blueprint('main',
 
 @BP.route('/')
 def index():
-    return render_template('index.jinja2')
+    return render_template('main/index.jinja2')
 
 
 @BP.route('/trip', methods=('POST',))
@@ -25,10 +28,19 @@ def start_trip():
     trip = {}
     res = arango.database('geo').collection('trips').insert(trip)
 
+    start = request.form.get('start')
+    if not start:
+        start = arango.database('geo').aql.execute('''
+        FOR dest IN destinations
+            SORT RAND()
+            LIMIT 1
+
+            RETURN dest._key
+        ''').next()
+
     parts = arango.database('geo').aql.execute('''
     FOR dest IN destinations
-        SORT RAND()
-        LIMIT 1
+        FILTER dest._key == @start
 
         LET park = FIRST(
             FOR p IN NEAR(destinations, dest.lat, dest.lng)
@@ -52,7 +64,7 @@ def start_trip():
         )
 
         RETURN {park, pilsner, pig}
-    ''').next()
+    ''', bind_vars={'start': start}).next()
 
     if parts['park']:
         arango.database('geo').collection('parts').insert({
@@ -84,4 +96,24 @@ def trip(trip_id):
             return c
    ''', bind_vars={'key': trip_id})
 
-    return render_template('trip.jinja2', trip=trip, parts=list(parts))
+    return render_template('main/trip.jinja2', trip=trip, parts=list(parts))
+
+
+@BP.route('/search')
+def search_parks():
+    dests = arango.database('geo').aql.execute(
+        '''
+    FOR dest IN destinations
+        SORT dest.name ASC
+
+        LIMIT 500
+        RETURN dest
+        '''
+    )
+
+    keyfunc = lambda x: x.get('type')
+    grouped = {}
+    for k, v in groupby(sorted(dests, key=keyfunc), keyfunc):
+        grouped[k] = list(v)
+
+    return render_template('main/search.jinja2', **grouped)
