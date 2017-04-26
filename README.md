@@ -1,4 +1,4 @@
-# Pigs, Parks, & Pilsners
+# Pigs, Parks, & Pints
 
 Mostly an excuse to play with some geocoding APIs.
 
