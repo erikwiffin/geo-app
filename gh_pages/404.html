@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Pigs · Parks · Pints</title>
+<!-- =====================================================================
+     GitHub Pages has no server-side routing, so a request for a clean
+     path like /trip/370811614 lands here (404). This script repackages
+     the path into a query string and bounces to the root, where the
+     restore snippet in index.html puts the URL back the way it was.
+
+     pathSegmentsToKeep = 0 because the site lives at the domain root
+     (custom domain). If you ever host it under a project path like
+     user.github.io/pigsparkspints/, set this to 1.
+     ===================================================================== -->
+<script>
+(function () {
+  var pathSegmentsToKeep = 0;
+  var l = window.location;
+  l.replace(
+    l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+    l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+    l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+    (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+    l.hash
+  );
+})();
+</script>
+</head>
+<body></body>
+</html>

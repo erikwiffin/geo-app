@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pigs · Parks · Pints — a North Carolina day-trip, dealt at random</title>
+<meta name="description" content="A retired little tool that pairs a hike, a barbecue joint, and a brewery into one North Carolina day trip. It's resting now — but the map still runs on its own." />
+
+<!-- ===================================================================
+     GitHub Pages SPA route restore.
+     Pairs with 404.html so a clean permalink like
+       https://pigsparkspints.com/trip/370811614
+     resolves to this page with the path intact.
+     (Adapted from the well-known rafgraph/spa-github-pages technique.)
+     =================================================================== -->
+<script>
+(function (l) {
+  if (l.search[1] === '/') {
+    var decoded = l.search.slice(1).split('&').map(function (s) {
+      return s.replace(/~and~/g, '&');
+    }).join('?');
+    window.history.replaceState(null, null,
+      l.pathname.slice(0, -1) + decoded + l.hash);
+  }
+}(window.location));
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+
+<style>
+  :root{
+    --paper:#E8E9DF;        /* cool glacial map paper */
+    --paper-2:#E0E2D5;      /* slightly deeper panel */
+    --ink:#23261F;          /* warm near-black */
+    --ink-soft:#54584b;
+    --pig:#8C4A5B;          /* smoky plum */
+    --park:#23564B;         /* pine-teal */
+    --pint:#B8791A;         /* ochre */
+    --slate:#3A5A6B;        /* connective accent: routes, links */
+    --line:rgba(35,38,31,.16);
+    --line-strong:rgba(35,38,31,.42);
+    --stamp:rgba(140,74,91,.34);
+    --shadow:0 1px 0 rgba(35,38,31,.06), 0 10px 30px -18px rgba(35,38,31,.5);
+  }
+
+  *{box-sizing:border-box}
+  html{ -webkit-text-size-adjust:100% }
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      repeating-radial-gradient(circle at 86% -8%, transparent 0 22px, rgba(58,90,107,.045) 22px 23px),
+      repeating-radial-gradient(circle at 8% 112%, transparent 0 30px, rgba(35,86,75,.04) 30px 31px);
+    color:var(--ink);
+    font-family:"Newsreader", Georgia, "Times New Roman", serif;
+    font-size:18px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 22px }
+
+  .mono{ font-family:"Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace }
+  .eyebrow{
+    font-family:"Space Mono", monospace; font-size:12px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--slate);
+  }
+
+  a{ color:var(--slate); text-underline-offset:3px; text-decoration-thickness:1px }
+  a:hover{ color:var(--ink) }
+
+  /* ---------- Masthead ---------- */
+  .mast{
+    border-bottom:1.5px solid var(--line-strong);
+    padding:18px 0 16px;
+  }
+  .mast-row{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap }
+  .wordmark{
+    font-family:"Space Grotesk", system-ui, sans-serif;
+    font-weight:700; letter-spacing:-.01em; line-height:.95;
+    font-size:clamp(26px, 4.4vw, 40px); margin:0;
+  }
+  .wordmark .dot{ color:var(--line-strong); font-weight:600; padding:0 .12em }
+  .wordmark .w-pig{ color:var(--pig) }
+  .wordmark .w-park{ color:var(--park) }
+  .wordmark .w-pint{ color:var(--pint) }
+  .mast-meta{ text-align:right; color:var(--ink-soft) }
+  .mast-meta .mono{ font-size:12.5px }
+
+  /* ---------- Hero ---------- */
+  .hero{ position:relative; padding:36px 0 8px }
+  .hero-grid{ display:grid; grid-template-columns:1fr 1fr; gap:38px; align-items:start }
+  .lede h2{
+    font-family:"Newsreader", serif; font-weight:400; font-size:clamp(24px,3vw,31px);
+    line-height:1.28; margin:.4em 0 .2em; max-width:24ch;
+  }
+  .lede p{ margin:.7em 0; color:var(--ink-soft); max-width:42ch }
+  .lede p strong{ color:var(--ink); font-weight:500 }
+
+  .deal{
+    margin-top:18px; display:inline-flex; align-items:center; gap:12px;
+    font-family:"Space Grotesk", sans-serif; font-weight:600; font-size:17px;
+    color:var(--paper); background:var(--ink);
+    border:none; border-radius:2px; padding:13px 20px 13px 18px;
+    cursor:pointer; box-shadow:var(--shadow);
+    transition:transform .12s ease, background .2s ease;
+  }
+  .deal:hover{ background:#000; transform:translateY(-1px) }
+  .deal:active{ transform:translateY(0) }
+  .deal:focus-visible{ outline:3px solid var(--slate); outline-offset:3px }
+  .deal .dice{ display:inline-flex; transition:transform .5s cubic-bezier(.2,.9,.2,1) }
+  .deal.rolling .dice{ transform:rotate(360deg) }
+  .deal .kbd{ font-family:"Space Mono",monospace; font-size:11px; opacity:.6; border:1px solid rgba(232,233,223,.4); border-radius:3px; padding:1px 5px; margin-left:2px }
+
+  /* rubber stamp */
+  .stamp{
+    position:absolute; top:24px; right:-6px; transform:rotate(-9deg);
+    border:2.5px solid var(--stamp); color:var(--stamp);
+    border-radius:7px; padding:7px 12px 6px; text-align:center;
+    font-family:"Space Mono", monospace; pointer-events:none; user-select:none;
+    mix-blend-mode:multiply;
+  }
+  .stamp .big{ display:block; font-weight:700; letter-spacing:.18em; font-size:15px }
+  .stamp .small{ display:block; font-size:8.5px; letter-spacing:.16em; margin-top:2px }
+
+  /* ---------- Map ---------- */
+  .map-frame{
+    border:1.5px solid var(--line-strong); border-radius:3px; overflow:hidden;
+    background:var(--paper-2); box-shadow:var(--shadow);
+  }
+  .map-cap{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 12px; border-bottom:1.5px solid var(--line); background:var(--paper);
+  }
+  .map-cap .eyebrow{ color:var(--ink-soft) }
+  #map{ height:430px; width:100%; background:var(--paper-2) }
+  #map.dead{ display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; color:var(--ink-soft) }
+  .leaflet-container{ background:#dfe2d6; font-family:"Space Mono", monospace }
+
+  /* category pin (divIcon) */
+  .pin{ display:grid; place-items:center; width:30px; height:30px; border-radius:50% 50% 50% 2px;
+    transform:rotate(45deg); color:var(--paper); box-shadow:0 4px 10px -4px rgba(0,0,0,.6) }
+  .pin svg{ transform:rotate(-45deg); width:16px; height:16px }
+  .pin-pig{ background:var(--pig) } .pin-park{ background:var(--park) } .pin-pint{ background:var(--pint) }
+
+  /* ---------- Ticket ---------- */
+  .ticket-region{ padding:30px 0 10px }
+  .ticket{
+    position:relative; background:var(--paper); border:1.5px solid var(--ink);
+    border-radius:4px; box-shadow:var(--shadow); overflow:hidden;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .ticket.swap{ opacity:0; transform:translateY(6px) }
+  .ticket-head{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:14px;
+    padding:16px 22px 14px; border-bottom:2px dashed var(--line-strong); flex-wrap:wrap;
+  }
+  .ticket-head .t-title{ font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:20px }
+  .ticket-head .t-serial{ text-align:right; line-height:1.2 }
+  .ticket-head .t-serial .num{ font-family:"Space Mono",monospace; font-weight:700; font-size:22px; color:var(--ink) }
+  .ticket-head .t-serial .lab{ display:block; font-family:"Space Mono",monospace; font-size:10px; letter-spacing:.2em; color:var(--ink-soft); text-transform:uppercase }
+
+  .rows{ list-style:none; margin:0; padding:6px 0 }
+  .row{ display:grid; grid-template-columns:42px 1fr auto; gap:14px; align-items:center; padding:14px 22px;
+    border-bottom:1px solid var(--line) }
+  .row:last-child{ border-bottom:none }
+  .row .glyph{ width:38px; height:38px; border-radius:50%; display:grid; place-items:center; color:var(--paper) }
+  .row .glyph svg{ width:21px; height:21px }
+  .g-pig{ background:var(--pig) } .g-park{ background:var(--park) } .g-pint{ background:var(--pint) }
+  .row .body .kind{ font-family:"Space Mono",monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft) }
+  .row .body .name{ font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:18.5px; line-height:1.2 }
+  .row .body .name a{ color:inherit; text-decoration:none; border-bottom:1px solid var(--line-strong) }
+  .row .body .name a:hover{ border-color:var(--ink) }
+  .row .body .where{ font-family:"Newsreader",serif; color:var(--ink-soft); font-size:15px }
+  .row .meta{ text-align:right; font-family:"Space Mono",monospace; font-size:13px; color:var(--ink-soft); white-space:nowrap }
+  .row .meta .start{ color:var(--slate); font-weight:700 }
+  .row .meta .coord{ display:block; font-size:11px; opacity:.7 }
+
+  .ticket-foot{
+    display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:14px 22px; border-top:2px dashed var(--line-strong); background:var(--paper-2);
+    font-family:"Space Mono",monospace; font-size:13px; color:var(--ink-soft);
+  }
+  .ticket-foot .loop b{ color:var(--ink); font-weight:700 }
+  .perf{ height:0; border-top:0 }
+  /* perforation dots along the dashed seams handled by dashed borders above */
+
+  .empty{ padding:40px 22px; text-align:center; color:var(--ink-soft); font-family:"Newsreader",serif }
+
+  /* ---------- About / footer ---------- */
+  .about{ border-top:1.5px solid var(--line-strong); margin-top:46px; padding:40px 0 64px }
+  .about-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:34px }
+  .about h3{ font-family:"Space Mono",monospace; font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--slate); margin:0 0 .6em; font-weight:700 }
+  .about p{ margin:.4em 0; font-size:16px; color:var(--ink-soft) }
+  .about code{ font-family:"Space Mono",monospace; font-size:13px; background:var(--paper-2); padding:1px 5px; border-radius:3px; color:var(--ink) }
+  .colophon{ margin-top:30px; font-family:"Space Mono",monospace; font-size:11.5px; letter-spacing:.04em; color:var(--ink-soft); display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:16px }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:860px){
+    body{ font-size:17px }
+    .hero-grid{ grid-template-columns:1fr; gap:26px }
+    .about-grid{ grid-template-columns:1fr; gap:26px }
+    #map{ height:320px }
+    .stamp{ top:auto; bottom:6px; right:6px }
+    .mast-meta{ text-align:left }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important }
+    .deal .dice{ transition:none }
+  }
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap mast-row">
+    <h1 class="wordmark">
+      <span class="w-pig">Pigs</span><span class="dot">·</span><span class="w-park">Parks</span><span class="dot">·</span><span class="w-pint">Pints</span>
+    </h1>
+    <div class="mast-meta">
+      <span class="eyebrow">a day-trip dealer · est. North Carolina</span><br>
+      <span class="mono" id="mast-serial">no. —</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="lede">
+        <span class="eyebrow">the premise</span>
+        <h2>One hike, one plate of barbecue, one brewery — strung together into a single day on the road.</h2>
+        <p>Pick any one at random and it finds you the closest of the other two, then draws the loop on a map. It ran for years out of <strong>North Carolina</strong>, one Saturday at a time.</p>
+        <p>The server's been put to rest. But the whole thing is small enough to run on its own now — so the map still works. <strong>Deal yourself one for old times' sake.</strong></p>
+        <button class="deal" id="deal" type="button">
+          <span class="dice" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+          </span>
+          Deal me a trip
+          <span class="kbd">space</span>
+        </button>
+      </div>
+
+      <div>
+        <div class="map-frame">
+          <div class="map-cap">
+            <span class="eyebrow">the route</span>
+            <span class="eyebrow" id="map-sub">— · — · —</span>
+          </div>
+          <div id="map" role="img" aria-label="Map of the dealt day trip"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stamp" aria-hidden="true">
+      <span class="big">RESTING</span>
+      <span class="small">KEYS · UNDER · THE · MAT</span>
+    </div>
+  </section>
+
+  <section class="ticket-region">
+    <div class="wrap">
+      <div class="ticket" id="ticket">
+        <div class="empty" id="ticket-empty">Loading the map…</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about">
+    <div class="wrap">
+      <div class="about-grid">
+        <div>
+          <h3>What it did</h3>
+          <p>Three categories — <em>pigs</em> (barbecue), <em>parks</em> (a hike), <em>pints</em> (a brewery). It rolled a random anchor, found the nearest neighbor in each of the other two, and handed back a loop you could actually drive on a Saturday.</p>
+        </div>
+        <div>
+          <h3>The numbers</h3>
+          <p>Every trip carries a serial like <code>370811614</code>. That number <em>is</em> the trip — it seeds the deal, so the same link always rebuilds the same three stops. Bookmark a ticket and it keeps.</p>
+        </div>
+        <div>
+          <h3>Reviving it</h3>
+          <p>It's a single page now, no server behind it. Swap the <code>PLACES</code> list for your own spots, push to GitHub&nbsp;Pages, point the domain at it, and it's back. Notes for that are in the README.</p>
+        </div>
+      </div>
+      <div class="colophon">
+        <span>Pigs · Parks · Pints — a North Carolina keepsake.</span>
+        <span>Map tiles © OpenStreetMap contributors · distances as the crow flies</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Leaflet (loads from CDN at view time; the page degrades gracefully if it's blocked) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+<script>
+/* =====================================================================
+   PIGS · PARKS · PINTS  —  client-side day-trip dealer
+   =====================================================================
+   No backend. The whole tool is: pick a random anchor, find the nearest
+   neighbour in each of the other two categories, draw the loop.
+   A trip's permalink number is the random seed, so /trip/<n> is stable.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   EDIT YOUR PLACES HERE
+   ---------------------------------------------------------------------
+   These are real, well-known North Carolina spots with APPROXIMATE
+   coordinates — a starter set so the map works out of the box. Replace
+   them with your own database. Each item just needs { name, town, lat,
+   lng }. (url is optional and links the name on the ticket.)
+   --------------------------------------------------------------------- */
+const PLACES = {
+  pig: [
+    { name:"Lexington Barbecue",        town:"Lexington",       lat:35.7935, lng:-80.2755 },
+    { name:"Skylight Inn BBQ",          town:"Ayden",           lat:35.4710, lng:-77.4180 },
+    { name:"The Pit",                   town:"Raleigh",         lat:35.7806, lng:-78.6486 },
+    { name:"Sam Jones BBQ",             town:"Winterville",     lat:35.5290, lng:-77.4007 },
+    { name:"Picnic",                    town:"Durham",          lat:35.9970, lng:-78.9550 },
+    { name:"Buxton Hall Barbecue",      town:"Asheville",       lat:35.5870, lng:-82.5570 },
+    { name:"Stamey's Barbecue",         town:"Greensboro",      lat:36.0610, lng:-79.8270 },
+    { name:"12 Bones Smokehouse",       town:"Asheville",       lat:35.6010, lng:-82.5530 },
+    { name:"Wilber's Barbecue",         town:"Goldsboro",       lat:35.3760, lng:-77.9410 },
+    { name:"B's Barbecue",              town:"Greenville",      lat:35.6210, lng:-77.3770 }
+  ],
+  park: [
+    { name:"Hanging Rock State Park",   town:"Danbury",         lat:36.3933, lng:-80.2675 },
+    { name:"Pilot Mountain State Park", town:"Pinnacle",        lat:36.3404, lng:-80.4730 },
+    { name:"Eno River State Park",      town:"Durham",          lat:36.0727, lng:-79.0058 },
+    { name:"Crowders Mountain SP",      town:"Kings Mountain",  lat:35.2137, lng:-81.2912 },
+    { name:"Stone Mountain State Park", town:"Roaring Gap",     lat:36.3879, lng:-81.0334 },
+    { name:"Umstead State Park",        town:"Raleigh",         lat:35.8939, lng:-78.7503 },
+    { name:"Raven Rock State Park",     town:"Lillington",      lat:35.4571, lng:-78.9117 },
+    { name:"Mount Mitchell State Park", town:"Burnsville",      lat:35.7648, lng:-82.2652 },
+    { name:"DuPont State Forest",       town:"Cedar Mountain",  lat:35.2008, lng:-82.6157 },
+    { name:"South Mountains SP",        town:"Connelly Springs",lat:35.6018, lng:-81.6293 }
+  ],
+  pint: [
+    { name:"Wicked Weed Brewing",       town:"Asheville",       lat:35.5930, lng:-82.5510 },
+    { name:"Highland Brewing",          town:"Asheville",       lat:35.5660, lng:-82.4860 },
+    { name:"Sierra Nevada Brewing",     town:"Mills River",     lat:35.3870, lng:-82.5530 },
+    { name:"Foothills Brewing",         town:"Winston-Salem",   lat:36.0980, lng:-80.2440 },
+    { name:"Olde Mecklenburg Brewery",  town:"Charlotte",       lat:35.1880, lng:-80.8730 },
+    { name:"NoDa Brewing Company",      town:"Charlotte",       lat:35.2480, lng:-80.8030 },
+    { name:"Trophy Brewing",            town:"Raleigh",         lat:35.7820, lng:-78.6520 },
+    { name:"Ponysaurus Brewing",        town:"Durham",          lat:35.9920, lng:-78.8980 },
+    { name:"Bond Brothers Beer",        town:"Cary",            lat:35.7820, lng:-78.7800 },
+    { name:"Burial Beer Co.",           town:"Asheville",       lat:35.5870, lng:-82.5560 }
+  ]
+};
+
+const ORDER = ["pig","park","pint"];
+const LABELS = { pig:"pig", park:"park", pint:"pint" };
+const KIND   = { pig:"barbecue", park:"the hike", pint:"the brewery" };
+const GLYPH = {
+  pig:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5c2 0 3.6.7 4.7 1.8l2.2-.7c.6-.2 1.1.4.8 1l-1 1.9c.4.8.6 1.7.6 2.6 0 3.6-3.3 6.4-7.3 6.4S4.7 15.2 4.7 11.6c0-.9.2-1.8.6-2.6l-1-1.9c-.3-.6.2-1.2.8-1l2.2.7C8.4 5.7 10 5 12 5z"/><circle cx="10" cy="13.4" r="1.05" fill="#E8E9DF"/><circle cx="14" cy="13.4" r="1.05" fill="#E8E9DF"/></svg>',
+  park:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l4 6h-2.4l3.2 5H14v3h-4v-3H7.2l3.2-5H8z"/><rect x="11" y="17" width="2" height="3.4"/></svg>',
+  pint:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 5h11l-.7 3.2H7.2zM7.4 9.4h9.2l-1.2 9.1c-.1.8-.8 1.5-1.7 1.5h-3.4c-.9 0-1.6-.7-1.7-1.5z"/><circle cx="9" cy="4.4" r="1.2"/><circle cx="12" cy="3.6" r="1.3"/><circle cx="15" cy="4.4" r="1.2"/></svg>'
+};
+
+/* ---- deterministic RNG seeded by the trip number ---- */
+function seedHash(n){
+  let h = (n >>> 0);
+  h ^= h >>> 16; h = Math.imul(h, 0x45d9f3b);
+  h ^= h >>> 16; h = Math.imul(h, 0x45d9f3b);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+function mulberry32(a){
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* ---- distance, as the crow flies (miles) ---- */
+function miles(a, b){
+  const R = 3958.8, toRad = x => x * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const la1 = toRad(a.lat), la2 = toRad(b.lat);
+  const h = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function nearest(from, list){
+  let best = null, bd = Infinity;
+  for (const p of list){ const d = miles(from, p); if (d < bd){ bd = d; best = p; } }
+  return best;
+}
+
+/* ---- build a trip from a numeric id ---- */
+function buildTrip(id){
+  const rng = mulberry32(seedHash(id));
+  const anchorKey = ORDER[Math.floor(rng() * 3)];
+  const anchor = PLACES[anchorKey][Math.floor(rng() * PLACES[anchorKey].length)];
+  const stops = {};
+  stops[anchorKey] = anchor;
+  for (const key of ORDER){
+    if (key === anchorKey) continue;
+    stops[key] = nearest(anchor, PLACES[key]);
+  }
+  const loop =
+    miles(stops.pig, stops.park) +
+    miles(stops.park, stops.pint) +
+    miles(stops.pint, stops.pig);
+  return { id, anchorKey, stops, loop };
+}
+
+/* ---- map ---- */
+let map = null, layer = null;
+const mapEl = document.getElementById('map');
+function pinIcon(key){
+  return L.divIcon({
+    className:'', iconSize:[30,30], iconAnchor:[6,30], popupAnchor:[9,-26],
+    html:'<div class="pin pin-'+key+'">'+GLYPH[key]+'</div>'
+  });
+}
+function drawMap(trip){
+  if (typeof L === 'undefined'){
+    mapEl.classList.add('dead');
+    mapEl.textContent = "The map needs Leaflet, which didn't load here. The ticket below still has every stop.";
+    return;
+  }
+  if (!map){
+    map = L.map(mapEl, { scrollWheelZoom:false, attributionControl:true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom:18, attribution:'© OpenStreetMap'
+    }).addTo(map);
+  }
+  if (layer) layer.remove();
+  layer = L.layerGroup().addTo(map);
+
+  const pts = [];
+  for (const key of ORDER){
+    const p = trip.stops[key];
+    pts.push([p.lat, p.lng]);
+    L.marker([p.lat, p.lng], { icon: pinIcon(key) })
+      .bindPopup('<b>'+p.name+'</b><br>'+LABELS[key]+' · '+p.town)
+      .addTo(layer);
+  }
+  // close the loop and draw it
+  L.polyline([...pts, pts[0]], {
+    color:getCSS('--slate'), weight:2.5, opacity:.9, dashArray:'2 7', lineCap:'round'
+  }).addTo(layer);
+
+  map.fitBounds(L.latLngBounds(pts).pad(0.35));
+}
+function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+/* ---- ticket ---- */
+const ticketEl = document.getElementById('ticket');
+function fmt(n){ return Math.round(n).toLocaleString(); }
+function coord(p){ return p.lat.toFixed(3)+', '+p.lng.toFixed(3); }
+
+function renderTicket(trip){
+  const a = trip.stops[trip.anchorKey];
+  let rows = '';
+  for (const key of ORDER){
+    const p = trip.stops[key];
+    const isStart = key === trip.anchorKey;
+    const dist = isStart ? '<span class="start">start here</span>'
+                         : '+ ' + fmt(miles(a, p)) + ' mi';
+    rows += `
+      <li class="row">
+        <span class="glyph g-${key}" aria-hidden="true">${GLYPH[key]}</span>
+        <span class="body">
+          <span class="kind">${LABELS[key]} · ${KIND[key]}</span>
+          <span class="name">${escapeHTML(p.name)}</span>
+          <span class="where">${escapeHTML(p.town)}, NC</span>
+        </span>
+        <span class="meta">${dist}<span class="coord">${coord(p)}</span></span>
+      </li>`;
+  }
+  const html = `
+    <div class="ticket-head">
+      <div class="t-title">Your trip</div>
+      <div class="t-serial">
+        <span class="num">${trip.id}</span>
+        <span class="lab">trip no.</span>
+      </div>
+    </div>
+    <ul class="rows">${rows}</ul>
+    <div class="ticket-foot">
+      <span class="loop">loop ≈ <b>${fmt(trip.loop)} mi</b> round</span>
+      <span class="permalink">pigsparkspints.com/trip/${trip.id}</span>
+    </div>`;
+
+  ticketEl.classList.add('swap');
+  setTimeout(() => { ticketEl.innerHTML = html; ticketEl.classList.remove('swap'); }, 160);
+}
+function escapeHTML(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---- orchestration ---- */
+function show(trip, push){
+  const path = '/trip/' + trip.id;
+  if (push === 'push') history.pushState({ id:trip.id }, '', path);
+  else if (push === 'replace') history.replaceState({ id:trip.id }, '', path);
+  document.getElementById('mast-serial').textContent = 'no. ' + trip.id;
+  document.getElementById('map-sub').textContent =
+    trip.stops.pig.town + ' / ' + trip.stops.park.town + ' / ' + trip.stops.pint.town;
+  renderTicket(trip);
+  drawMap(trip);
+}
+
+function newId(){ return Math.floor(Math.random() * 900000000) + 100000000; }
+
+function dealNew(){
+  const btn = document.getElementById('deal');
+  btn.classList.add('rolling');
+  setTimeout(() => btn.classList.remove('rolling'), 520);
+  show(buildTrip(newId()), 'push');
+}
+
+function routeFromPath(){
+  const m = location.pathname.match(/\/trip\/(\d+)/);
+  if (m){ show(buildTrip(parseInt(m[1], 10)), false); }
+  else  { show(buildTrip(newId()), 'replace'); }  // bare landing: deal one, keep its permalink
+}
+
+document.getElementById('deal').addEventListener('click', dealNew);
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !/INPUT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)){
+    e.preventDefault(); dealNew();
+  }
+});
+window.addEventListener('popstate', routeFromPath);
+
+// kick off once Leaflet has had a chance to load
+window.addEventListener('load', routeFromPath);
+</script>
+</body>
+</html>
